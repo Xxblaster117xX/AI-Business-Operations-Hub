@@ -93,6 +93,9 @@
       <label for="endpoint">Webhook URL</label>
       <input id="endpoint" value="http://localhost:5679/webhook/intake" />
 
+      <label for="backendUrl">Backend API URL</label>
+      <input id="backendUrl" value="http://localhost:8000" />
+
       <button id="submit">Send request</button>
       <div id="error" class="error" style="margin-top:10px;"></div>
     </div>
@@ -171,7 +174,34 @@ function renderResult(data) {
       <div style="font-size:.8rem;color:var(--muted);margin-bottom:6px;">AI-generated response (grounded in company knowledge base)</div>
       <div class="email-box">${(data.ai_generated_email || '').replace(/</g, '&lt;')}</div>
     </div>
+
+    ${data.decision === 'human_approval' ? `
+      <button id="approveBtn">Approve &amp; send</button>
+      <div id="approveStatus" style="font-size:.82rem;color:var(--muted);"></div>
+    ` : ''}
   `;
+
+  if (data.decision === 'human_approval') {
+    $('approveBtn').addEventListener('click', () => approveLead(data.lead_id));
+  }
+}
+
+async function approveLead(leadId) {
+  const btn = $('approveBtn');
+  const status = $('approveStatus');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  try {
+    const res = await fetch(`${$('backendUrl').value}/api/leads/${leadId}/approve`, { method: 'POST' });
+    if (!res.ok) throw new Error(`Request failed (${res.status})`);
+    const data = await res.json();
+    status.textContent = data.action === 'sent' ? 'Sent.' : data.action;
+    btn.remove();
+  } catch (err) {
+    status.textContent = err.message || 'Failed to approve.';
+    btn.disabled = false;
+    btn.textContent = 'Approve & send';
+  }
 }
 </script>
 </body>

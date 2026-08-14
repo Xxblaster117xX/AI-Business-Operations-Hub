@@ -113,6 +113,12 @@ class LeadOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ApprovalResult(BaseModel):
+    lead_id: int
+    action: Literal["sent", "rejected", "already_resolved"]
+    email_result: dict | None = None
+
+
 class FollowupResult(BaseModel):
     lead_id: int
     action: Literal["skipped_replied", "skipped_not_due", "followup_sent"]
