@@ -36,8 +36,9 @@ external accounts. To go live:
 - Replace the **Webhook** trigger in workflow 01 with a **Gmail Trigger**
   node (OAuth2), mapping subject/body/from into the same
   `{name, email, company, message}` shape.
-- Implement `send_email` in `backend/app/integrations/email_client.py` using
-  the Gmail API instead of the log file — no other code changes needed.
+- `send_email` in `backend/app/integrations/email_client.py` already sends
+  real email over SMTP when `SMTP_USER`/`SMTP_PASSWORD` are set in `.env`
+  (Gmail app password) — leave them blank to keep using the mock.
 - Implement `notify` / `notify_high_value_lead` in
   `backend/app/integrations/slack_client.py` using a real Slack Incoming
   Webhook URL — same signature, same callers.

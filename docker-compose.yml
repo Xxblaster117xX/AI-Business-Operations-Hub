@@ -40,6 +40,7 @@ services:
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
       - WEBHOOK_URL=http://localhost:${N8N_PORT}/
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
       - GENERIC_TIMEZONE=Europe/Madrid
       - BACKEND_BASE_URL=http://backend:8000
     ports:

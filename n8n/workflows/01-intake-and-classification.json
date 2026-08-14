@@ -8,6 +8,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [-200, 300],
+      "webhookId": "87d6b373-3446-46f0-b354-b361a5da69a4",
       "parameters": {
         "httpMethod": "POST",
         "path": "intake",
