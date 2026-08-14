@@ -1,0 +1,81 @@
+{
+  "id": "wf-02-followup-check",
+  "name": "02 - Followup Check",
+  "nodes": [
+    {
+      "id": "schedule_hourly",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-200, 300],
+      "parameters": {
+        "rule": { "interval": [{ "field": "hours", "hoursInterval": 1 }] }
+      }
+    },
+    {
+      "id": "http_get_leads",
+      "name": "Get Leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [40, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.BACKEND_BASE_URL}}/api/leads",
+        "options": {}
+      }
+    },
+    {
+      "id": "code_filter_due",
+      "name": "Filter Due For Followup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, 300],
+      "parameters": {
+        "jsCode": "return items.filter(i => i.json.replied === false && i.json.followup_sent === false);"
+      }
+    },
+    {
+      "id": "split_batches",
+      "name": "One Lead At A Time",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [520, 300],
+      "parameters": { "batchSize": 1 }
+    },
+    {
+      "id": "http_send_followup",
+      "name": "Send Followup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.BACKEND_BASE_URL}}/api/leads/{{$json.id}}/followup",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Every Hour": {
+      "main": [[{ "node": "Get Leads", "type": "main", "index": 0 }]]
+    },
+    "Get Leads": {
+      "main": [[{ "node": "Filter Due For Followup", "type": "main", "index": 0 }]]
+    },
+    "Filter Due For Followup": {
+      "main": [[{ "node": "One Lead At A Time", "type": "main", "index": 0 }]]
+    },
+    "One Lead At A Time": {
+      "main": [
+        [],
+        [{ "node": "Send Followup", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Followup": {
+      "main": [[{ "node": "One Lead At A Time", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

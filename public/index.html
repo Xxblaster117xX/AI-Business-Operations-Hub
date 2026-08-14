@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Business Operations Hub — Intake</title>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --panel: #121822;
+    --border: #232c39;
+    --text: #e6edf3;
+    --muted: #8b98a8;
+    --accent: #4f8cff;
+    --accent-2: #22c55e;
+    --danger: #ef4444;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f5f7fa; --panel:#ffffff; --border:#e2e8f0; --text:#0f172a; --muted:#5b6779; --accent:#3b6fe0; --accent-2:#16a34a; --danger:#dc2626; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+    font-family: -apple-system, Segoe UI, Inter, Roboto, sans-serif;
+    display: flex; justify-content: center; padding: 48px 20px;
+  }
+  .wrap { width: 100%; max-width: 880px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  p.sub { color: var(--muted); margin: 0 0 32px; font-size: .95rem; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px;
+  }
+  label { display: block; font-size: .82rem; color: var(--muted); margin: 14px 0 6px; }
+  label:first-of-type { margin-top: 0; }
+  input, textarea {
+    width: 100%; background: transparent; border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: .92rem;
+    font-family: inherit;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  button {
+    margin-top: 20px; width: 100%; padding: 12px; border: none; border-radius: 8px;
+    background: var(--accent); color: white; font-weight: 600; font-size: .95rem;
+    cursor: pointer;
+  }
+  button:disabled { opacity: .6; cursor: default; }
+  .result-card { display: flex; flex-direction: column; gap: 14px; min-height: 100%; }
+  .placeholder { color: var(--muted); font-size: .88rem; margin: auto; text-align: center; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px;
+    border-radius: 999px; font-size: .75rem; font-weight: 600; width: fit-content;
+  }
+  .badge.high { background: rgba(239,68,68,.15); color: var(--danger); }
+  .badge.medium { background: rgba(79,140,255,.15); color: var(--accent); }
+  .badge.low { background: rgba(139,152,168,.15); color: var(--muted); }
+  .badge.auto { background: rgba(34,197,94,.15); color: var(--accent-2); }
+  .badge.approval { background: rgba(239,68,68,.15); color: var(--danger); }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: .86rem; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; }
+  .email-box {
+    background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px; font-size: .85rem; white-space: pre-wrap; line-height: 1.5;
+  }
+  .error { color: var(--danger); font-size: .85rem; }
+  .score { font-size: 2.2rem; font-weight: 700; line-height: 1; }
+  .score-row { display: flex; align-items: baseline; gap: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>AI Business Operations Hub</h1>
+  <p class="sub">Simulated intake form → n8n webhook → AI classification + RAG + auto-response.</p>
+
+  <div class="grid">
+    <div class="card">
+      <label for="name">Name</label>
+      <input id="name" placeholder="John Smith" />
+
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="john@company.com" />
+
+      <label for="company">Company</label>
+      <input id="company" placeholder="Acme Inc." />
+
+      <label for="message">Message</label>
+      <textarea id="message" placeholder="We have around 50 sales representatives and we're looking for an AI system to automate lead qualification. Budget is around €15,000."></textarea>
+
+      <label for="endpoint">Webhook URL</label>
+      <input id="endpoint" value="http://localhost:5679/webhook/intake" />
+
+      <button id="submit">Send request</button>
+      <div id="error" class="error" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card result-card" id="result-card">
+      <div class="placeholder" id="placeholder">AI analysis will appear here once you send a request.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+$('submit').addEventListener('click', async () => {
+  const payload = {
+    name: $('name').value.trim(),
+    email: $('email').value.trim(),
+    company: $('company').value.trim(),
+    message: $('message').value.trim(),
+  };
+  $('error').textContent = '';
+
+  if (!payload.name || !payload.email || !payload.message) {
+    $('error').textContent = 'Name, email and message are required.';
+    return;
+  }
+
+  $('submit').disabled = true;
+  $('submit').textContent = 'Analyzing…';
+
+  try {
+    const res = await fetch($('endpoint').value, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`Request failed (${res.status})`);
+    const data = await res.json();
+    renderResult(data);
+  } catch (err) {
+    $('error').textContent = err.message || 'Something went wrong. Is the stack running?';
+  } finally {
+    $('submit').disabled = false;
+    $('submit').textContent = 'Send request';
+  }
+});
+
+function renderResult(data) {
+  const a = data.analysis || {};
+  const priorityClass = a.priority || 'low';
+  const decisionClass = data.decision === 'auto_send' ? 'auto' : 'approval';
+  const decisionLabel = data.decision === 'auto_send' ? 'Auto-sent' : 'Needs human approval';
+
+  $('result-card').innerHTML = `
+    <div class="score-row">
+      <div class="score">${a.lead_score ?? '—'}</div>
+      <div>
+        <div style="font-size:.8rem;color:var(--muted)">AI Lead Score</div>
+        <span class="badge ${priorityClass}">${(a.priority || '').toUpperCase()} priority</span>
+      </div>
+    </div>
+
+    <dl class="kv">
+      <dt>Department</dt><dd>${a.department ?? '—'}</dd>
+      <dt>Intent</dt><dd>${a.intent ?? '—'}</dd>
+      <dt>Need</dt><dd>${a.need ?? '—'}</dd>
+      <dt>Sentiment</dt><dd>${a.sentiment ?? '—'}</dd>
+      <dt>Budget</dt><dd>${a.budget ? '€' + Number(a.budget).toLocaleString() : '—'}</dd>
+      <dt>Next action</dt><dd>${a.next_action ?? '—'}</dd>
+      <dt>Confidence</dt><dd>${data.confidence != null ? (data.confidence * 100).toFixed(0) + '%' : '—'}</dd>
+    </dl>
+
+    <span class="badge ${decisionClass}">${decisionLabel}</span>
+
+    <div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:6px;">AI-generated response (grounded in company knowledge base)</div>
+      <div class="email-box">${(data.ai_generated_email || '').replace(/</g, '&lt;')}</div>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>

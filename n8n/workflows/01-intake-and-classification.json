@@ -1,0 +1,152 @@
+{
+  "id": "wf-01-intake-classification",
+  "name": "01 - Intake & Classification",
+  "nodes": [
+    {
+      "id": "webhook_intake",
+      "name": "Webhook - Intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-200, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "intake",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "if_validate",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [40, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "leftValue": "={{$json.body.name}}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            },
+            {
+              "leftValue": "={{$json.body.email}}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            },
+            {
+              "leftValue": "={{$json.body.message}}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "http_analyze",
+      "name": "AI Analyze (classify + RAG + score)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [280, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.BACKEND_BASE_URL}}/api/analyze",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { name: $json.body.name, email: $json.body.email, company: $json.body.company, message: $json.body.message } }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "if_high_value",
+      "name": "High Value Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [520, 220],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "leftValue": "={{$json.analysis.lead_score}}",
+              "rightValue": 80,
+              "operator": { "type": "number", "operation": "gte" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "noop_priority",
+      "name": "Priority CRM Path",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [760, 120],
+      "parameters": {}
+    },
+    {
+      "id": "noop_normal",
+      "name": "Normal CRM Path",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [760, 320],
+      "parameters": {}
+    },
+    {
+      "id": "respond_ok",
+      "name": "Respond - Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [1000, 220],
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      }
+    },
+    {
+      "id": "respond_error",
+      "name": "Respond - Invalid Input",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [280, 420],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": \"name, email and message are required\" } }}",
+        "options": { "responseCode": 400 }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Intake": {
+      "main": [[{ "node": "Validate Input", "type": "main", "index": 0 }]]
+    },
+    "Validate Input": {
+      "main": [
+        [{ "node": "AI Analyze (classify + RAG + score)", "type": "main", "index": 0 }],
+        [{ "node": "Respond - Invalid Input", "type": "main", "index": 0 }]
+      ]
+    },
+    "AI Analyze (classify + RAG + score)": {
+      "main": [[{ "node": "High Value Lead?", "type": "main", "index": 0 }]]
+    },
+    "High Value Lead?": {
+      "main": [
+        [{ "node": "Priority CRM Path", "type": "main", "index": 0 }],
+        [{ "node": "Normal CRM Path", "type": "main", "index": 0 }]
+      ]
+    },
+    "Priority CRM Path": {
+      "main": [[{ "node": "Respond - Success", "type": "main", "index": 0 }]]
+    },
+    "Normal CRM Path": {
+      "main": [[{ "node": "Respond - Success", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
