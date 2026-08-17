@@ -34,8 +34,6 @@ Form ──▶ n8n (orchestration) ──▶ FastAPI backend (AI + RAG + busines
 
 <!-- Add 1-2 screenshots or a short GIF here: the intake form with an AI
      analysis result, and/or the n8n workflow canvas. -->
-
-## Photos of the 3 workflows
 <img width="1447" height="697" alt="image" src="https://github.com/user-attachments/assets/b1071540-37bb-4835-9cf4-d1d162cfab1e" />
 <img width="1527" height="812" alt="image" src="https://github.com/user-attachments/assets/800986c7-f740-46f4-b558-1b8608389f5e" />
 <img width="1365" height="821" alt="image" src="https://github.com/user-attachments/assets/41e2f563-798e-43c3-a552-915e19229e54" />
