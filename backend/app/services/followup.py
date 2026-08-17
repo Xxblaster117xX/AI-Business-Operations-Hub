@@ -50,9 +50,12 @@ def check_and_followup(db: Session, lead: Lead) -> FollowupResult:
     if lead.replied:
         return FollowupResult(lead_id=lead.id, action="skipped_replied")
 
+    if lead.followup_sent:
+        return FollowupResult(lead_id=lead.id, action="skipped_already_sent")
+
     now = datetime.now(timezone.utc)
     due = lead.next_followup_at is None or lead.next_followup_at <= now
-    if not due or lead.followup_sent:
+    if not due:
         return FollowupResult(lead_id=lead.id, action="skipped_not_due")
 
     draft = _draft_followup(lead)

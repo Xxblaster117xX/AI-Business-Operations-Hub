@@ -121,7 +121,7 @@ class ApprovalResult(BaseModel):
 
 class FollowupResult(BaseModel):
     lead_id: int
-    action: Literal["skipped_replied", "skipped_not_due", "followup_sent"]
+    action: Literal["skipped_replied", "skipped_not_due", "skipped_already_sent", "followup_sent"]
     email_result: dict | None = None
 
 
