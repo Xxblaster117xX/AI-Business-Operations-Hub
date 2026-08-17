@@ -1,9 +1,20 @@
 # AI Business Operations Hub
 
-An autonomous system that receives business requests (form submissions,
-eventually email), understands them with an LLM, retrieves grounded context
-from a company knowledge base (RAG), decides what to do, and executes it —
-with a human-approval guardrail whenever the AI isn't confident enough.
+![Python](https://img.shields.io/badge/Python-3.11-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-009688) ![n8n](https://img.shields.io/badge/n8n-orchestration-EA4B71) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-pgvector-336791) ![Gemini](https://img.shields.io/badge/Gemini-API-4285F4) ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED) ![License](https://img.shields.io/badge/license-MIT-green)
+
+An autonomous system that simulates how a small company handles the
+constant stream of requests hitting sales, finance, and ops — from a lead
+asking for pricing to a customer asking about a refund policy. It reads the
+raw message, classifies it, retrieves grounded context from the company's
+own knowledge base (RAG), decides what to do, and executes it — with a
+human-approval guardrail whenever the AI isn't confident enough to act
+alone.
+
+Built as a portfolio project to demonstrate **AI automation engineering**:
+knowing when to reach for low-code orchestration (n8n) versus real code
+(Python/FastAPI) for the actual business logic, designing AI guardrails
+that hold back low-confidence actions instead of blindly automating
+everything, and thinking in terms of measurable ROI, not just "it works."
 
 ```
 Form ──▶ n8n (orchestration) ──▶ FastAPI backend (AI + RAG + business logic)
@@ -18,6 +29,11 @@ Form ──▶ n8n (orchestration) ──▶ FastAPI backend (AI + RAG + busines
                                        │
                               /api/analytics (ROI metrics)
 ```
+
+## Demo
+
+<!-- Add 1-2 screenshots or a short GIF here: the intake form with an AI
+     analysis result, and/or the n8n workflow canvas. -->
 
 ## Stack
 
